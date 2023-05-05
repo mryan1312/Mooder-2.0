@@ -56,8 +56,8 @@ def popup_reader():
     t_read = Toplevel(master)
     txt_box = Text(t_read)
     txt_box.grid(row = 0, column = 0)
-    if os.path.isfile("moodhistory.csv") == True:
-        with open("moodhistory.csv", newline = '') as file:
+    if os.path.isfile(".\moodhistory.csv") == True:
+        with open(".\moodhistory.csv", 'r', newline = '') as file:
             reader = csv.reader(file)
             row1 = next(reader, None)
             header1 = row1[0]
@@ -80,9 +80,9 @@ def clear_data():
         tclear.destroy()
         tclear.update()
     def confirm_btn():
-        os.remove("moodhistory.csv")
+        os.remove(".\moodhistory.csv")
         exit_btn()
-    if os.path.isfile("moodhistory.csv") == True:
+    if os.path.isfile(".\moodhistory.csv") == True:
         tclear = Toplevel(master)
         tclear.title("Confirmation")
         Label(tclear, text = "Are you sure you want to delete all data?").grid(row = 0, column = 1)
@@ -100,11 +100,11 @@ def save_data():
     enc_notes = encrypt(key, notes.encode('utf-8'))
     enc_timestamp = encrypt(key, tstamp.encode('utf-8'))
     entry = [enc_timestamp, enc_rating, enc_notes]
-    if os.path.isfile("moodhistory.csv") == False:
-        with open("moodhistory.csv",'w', newline = '') as file:
+    if os.path.isfile(".\moodhistory.csv") == False:
+        with open(".\moodhistory.csv",'w', newline = '') as file:
             writer = csv.writer(file)
             writer.writerow(["Date", "Rating", "Notes"])
-    with open("moodhistory.csv",'a', newline = '') as file:
+    with open(".\moodhistory.csv",'a', newline = '') as file:
             writer = csv.writer(file)
             writer.writerow(entry)
             messagebox.showinfo("Success", "Entry Saved")
@@ -113,8 +113,8 @@ def plot_data():
     tstamps = []
     rates = []
     notes = []
-    if os.path.isfile("moodhistory.csv") == True:
-        with open("moodhistory.csv", newline = '') as file:
+    if os.path.isfile(".\moodhistory.csv") == True:
+        with open(".\moodhistory.csv", 'r', newline = '') as file:
             reader = csv.reader(file)
             row1 = next(reader, None)
             for line in reader:
