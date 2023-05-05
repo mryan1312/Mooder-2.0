@@ -68,10 +68,13 @@ def popup_reader():
                 tstamp_enc = line[0][2:-1]
                 rate_enc = line[1][2:-1]
                 note_enc = line[2][2:-1]
-                tstamp = decrypt(key, tstamp_enc.encode('utf-8'))
-                rate = decrypt(key, rate_enc.encode('utf-8'))
-                note = decrypt(key, note_enc.encode('utf-8'))
-                txt_box.insert(INSERT, tstamp + "     " + rate + "     " + note + "\n")
+                try:
+                    tstamp = decrypt(key, tstamp_enc.encode('utf-8'))
+                    rate = decrypt(key, rate_enc.encode('utf-8'))
+                    note = decrypt(key, note_enc.encode('utf-8'))
+                    txt_box.insert(INSERT, tstamp + "     " + rate + "     " + note + "\n")
+                except:
+                    messagebox.showinfo("Error", "Key mismatch.")
     else:
         txt_box.insert(INSERT, "Data not available yet.")
 
@@ -121,12 +124,15 @@ def plot_data():
                 tstamp_enc = line[0][2:-1]
                 rate_enc = line[1][2:-1]
                 note_enc = line[2][2:-1]
-                tstamp = decrypt(key, tstamp_enc.encode('utf-8'))
-                tstamps.append(tstamp)
-                rate = decrypt(key, rate_enc.encode('utf-8'))
-                rates.append(rate)
-                note = decrypt(key, note_enc.encode('utf-8'))
-                notes.append(note)
+                try:
+                    tstamp = decrypt(key, tstamp_enc.encode('utf-8'))
+                    tstamps.append(tstamp)
+                    rate = decrypt(key, rate_enc.encode('utf-8'))
+                    rates.append(rate)
+                    note = decrypt(key, note_enc.encode('utf-8'))
+                    notes.append(note)
+                except:
+                    messagebox.showinfo("Error", "Key mismatch.")
     else:
         txt_box.insert(INSERT, "Data not available yet.")
     fig = px.line(x = tstamps, y = rates, text = notes, title ="Mood Change over Time")
