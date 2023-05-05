@@ -13,11 +13,11 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import pandas as pd
 import plotly.express as px
 
-def password_to_key(password):                                      # Takes password to generate key
+def password_to_key(password):                                                  # Takes password to generate key
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
-        salt=b'',
+        salt=b'',                                                               # Salt '' so key is the same each generation
         iterations=390000,
     )
     key = base64.urlsafe_b64encode(kdf.derive(password.encode('utf-8')))
@@ -34,14 +34,15 @@ def decrypt(key, data):
     decode = token.decode('utf-8')
     return decode
 
-def get_password():
+def get_password():                                                                 # Opens popup at first run to generate encryption key from password
     def exit_btn_password():
         global key 
         key = password_to_key(password.get())
         t_password.destroy()
         t_password.update()
         if key != "":
-            messagebox.showinfo("Success", "Key was successfully generated.")
+            messagebox.showinfo("Success", "Key was successfully generated.\nChecking against current datafile.")
+            verify_key()
         else:
             messagebox.showinfo("Error", "Key generation failed.")
     t_password = Toplevel(master)
@@ -51,7 +52,7 @@ def get_password():
     pass_enter = Entry(t_password, textvariable = password).grid(row = 1)
     ttk.Button(t_password, text = "OK", command = exit_btn_password).grid(row = 2)
     
-def popup_reader():
+def popup_reader():                                                                 # Opens popup reader to display unencrypted values in CSV
     global key
     t_read = Toplevel(master)
     txt_box = Text(t_read)
@@ -63,12 +64,12 @@ def popup_reader():
             header1 = row1[0]
             header2 = row1[1]
             header3 = row1[2]
-            txt_box.insert(INSERT, header1 + "                        " + header2 + "   " + header3+"\n")
-            for line in reader:
-                tstamp_enc = line[0][2:-1]
+            txt_box.insert(INSERT, header1 + "                        " + header2 + "   " + header3+"\n") # Format for pretty
+            for line in reader:                                                                           # Iterate through each line, removing leading b' and trailing '
+                tstamp_enc = line[0][2:-1]                                                                # Unpacking each list item into a string
                 rate_enc = line[1][2:-1]
                 note_enc = line[2][2:-1]
-                try:
+                try:                                                                                      # Try to decrypt, if it fails, there is a key mismatch
                     tstamp = decrypt(key, tstamp_enc.encode('utf-8'))
                     rate = decrypt(key, rate_enc.encode('utf-8'))
                     note = decrypt(key, note_enc.encode('utf-8'))
@@ -135,12 +136,34 @@ def plot_data():
                     messagebox.showinfo("Error", "Key mismatch.")
     else:
         txt_box.insert(INSERT, "Data not available yet.")
-    fig = px.line(x = tstamps, y = rates, text = notes, title ="Mood Change over Time")
-    fig.update_layout(xaxis_title="Date-Time", yaxis_title="Mood Rating")
-    fig.show()
+    try:
+        fig = px.line(x = tstamps, y = rates, text = notes, title ="Mood Change over Time")
+        fig.update_layout(xaxis_title="Date-Time", yaxis_title="Mood Rating")
+        fig.show()
+    except:
+        messagebox.showinfo("Error", "Data not decrypted.")
+
+def verify_key():
+    global key
+    global confirmed
+    if os.path.isfile(".\moodhistory.csv") == True:
+        with open(".\moodhistory.csv", 'r', newline = '') as file:
+            reader = csv.reader(file)
+            row1 = next(reader, None)
+            row2 = next(reader, None)                                                                       
+            tstamp_enc = row2[0][2:-1]                                                               
+            try:                                                                                      
+                tstamp = decrypt(key, tstamp_enc.encode('utf-8'))
+            except:
+                messagebox.showinfo("Error", "Key mismatch.")
+                get_password()
+            confirmed = True
+    else:
+        pass
 
 password = ""
 key = ""
+confirmed = False
 master = tkinter.Tk(className='Mooder')
 Label(master, text ='Mood Rating').grid(row = 0, column = 0)
 Label(master, text ='Any notes for this entry?').grid(row=1, column = 0)
